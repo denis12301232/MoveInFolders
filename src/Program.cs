@@ -5,15 +5,19 @@ namespace Project
 {
     class Program
     {
-        static readonly string configPath = Helpers.combinePaths(Directory.GetCurrentDirectory(), "config", "config.json");
+        private static readonly string configPath = Helpers.combinePaths(Directory.GetCurrentDirectory(), "config", "config.json");
         private static readonly string version = "1.0";
+
+        private static string datePath
+        {
+            get => DateTime.Now.ToString("yyyy.MM.dd").Replace('.', '/');
+        }
 
         public static void Main(string[] args)
         {
             try
             {
                 watchArgs(args);
-                Console.WriteLine(Directory.GetCurrentDirectory());
                 Config? config = readConfig(configPath);
 
                 if (config == null || config?.path == null)
@@ -32,7 +36,7 @@ namespace Project
 
         }
 
-        public static void watchArgs(string[] args)
+        private static void watchArgs(string[] args)
         {
             if (args.Contains("-v"))
             {
@@ -41,7 +45,7 @@ namespace Project
             }
         }
 
-        public static void moveFiles(in string[] dirs, in string path)
+        private static void moveFiles(in string[] dirs, in string path)
         {
             string[] exts = new string[3] { ".xlsx", ".txt", " PLI.xlsx" };
             Progress progress = new Progress(dirs.Length, 50);
@@ -53,15 +57,15 @@ namespace Project
                 foreach (string ext in exts)
                 {
 
-                    if (!Directory.Exists(Helpers.combinePaths(dirs[i], Time.datePath)))
+                    if (!Directory.Exists(Helpers.combinePaths(dirs[i], datePath)))
                     {
-                        Directory.CreateDirectory(Helpers.combinePaths(dirs[i], Time.datePath));
+                        Directory.CreateDirectory(Helpers.combinePaths(dirs[i], datePath));
                     }
 
                     if (File.Exists(dirs[i] + ext))
                     {
 
-                        File.Move(dirs[i] + ext, Helpers.combinePaths(dirs[i], Time.datePath, folderName) + ext);
+                        File.Move(dirs[i] + ext, Helpers.combinePaths(dirs[i], datePath, folderName) + ext);
                     }
                 }
                 progress.draw(i + 1, $"Watch: {folderName}");
@@ -70,20 +74,20 @@ namespace Project
             progress.end("\nComplete!");
         }
 
-        public static Config? readConfig(in string path)
+        private static Config? readConfig(in string path)
         {
             StreamReader stream = new StreamReader(path);
             string json = stream.ReadToEnd();
             return JsonConvert.DeserializeObject<Config>(json);
         }
 
-        public static string[] getDirectiories(in string path)
+        private static string[] getDirectiories(in string path)
         {
             string[] dirs = Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly);
             return dirs;
         }
 
-        public class Config
+        private class Config
         {
             public string? path = null;
 
